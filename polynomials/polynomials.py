@@ -1,4 +1,5 @@
-from numbers import Number
+import enum
+from numbers import Number, Integral
 
 
 class Polynomial:
@@ -48,5 +49,59 @@ class Polynomial:
         else:
             return NotImplemented
 
+    def __neg__(self):
+        return Polynomial(tuple(-c for c in self.coefficients))
+
     def __radd__(self, other):
         return self + other
+
+    def __sub__(self, other):
+        return self + (-other)
+
+    def __rsub__(self, other):
+        return -self + other
+
+    def __mul__(self, other):
+
+        if isinstance(other, Polynomial):
+            coefs = [0 for i in range(self.degree() + other.degree() + 1)]
+            for i, c in enumerate(self.coefficients):
+                for j, d in enumerate(other.coefficients):
+                    coefs[i + j] += c * d
+
+            return Polynomial(tuple(coefs))
+
+        elif isinstance(other, Number):
+            if other:
+                return Polynomial(tuple(c * other for c in self.coefficients))
+            else:
+                return Polynomial((0,))
+        else:
+            return NotImplemented
+
+    def __rmul__(self, other):
+        return self * other
+
+    def __pow__(self, other):
+
+        if isinstance(other, Integral) and other > 0:
+            p = Polynomial(self.coefficients)
+            for i in range(other - 1):
+                p = p * self
+            return p
+
+        else:
+            return NotImplemented
+
+    def __call__(self, x):
+        return sum(c * x ** i for i, c in enumerate(self.coefficients))
+
+    def dx(self):
+        if self.degree():
+            return Polynomial(tuple(i * c for i, c in enumerate(self.coefficients[1:], start=1)))
+        else:
+            return Polynomial((0,))
+
+def derivative(p):
+    """Returns the derivative of a polynomial."""
+    return p.dx()
